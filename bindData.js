@@ -4,6 +4,11 @@ let bindData = function (params) {
 }
 
 function onChange (vm, params) {
+  // 定义不可被赋值运算符修改的属性eventHandle，防止对其类型进行破坏
+  Object.defineProperty(vm, 'eventHandle', {
+    value: {},
+    writable: false
+  })
   Object.keys(params).forEach((key) => {
     define.call(vm, key, params[key])
   })
@@ -31,17 +36,16 @@ function define (prototype, value) {
 }
 
 bindData.prototype = {
-  // event
-  eventHandle: {},
-
   // 监听data的改变，
   // dataName: string / data的变量名
   // eventName: string / 事件的别名
   // callback：function / 需要在data发生改变时执行的callback
   onDataChange: function (dataName, eventName, callback) {
     let dataCallbacks = this.eventHandle[dataName] || {}
-    dataCallbacks[eventName] = callback
-    this.eventHandle[dataName] = dataCallbacks
+    if (typeof callback == 'function') {
+      dataCallbacks[eventName] = callback
+      this.eventHandle[dataName] = dataCallbacks
+    }
   },
 
   // 取消监听，若只传dataName，将取消该变量的所有监听
@@ -60,7 +64,6 @@ export default new bindData({
   /* 在此处定义需要监听的data */
   test: {}
 })
-
 
 /* 
   示例：
